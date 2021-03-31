@@ -12,18 +12,19 @@ import calfem.utils as cfu     # <-- Blandade rutiner
 
 class Solver(object):
     """Klass för att hantera lösningen av vår beräkningsmodell."""
-    def __init__(self):
-        pass
+    def __init__(self, input_data, output_data):
+        self.input_data = input_data
+        self.output_data = output_data
     
-    def execute(self, input_data):
+    def execute(self):
 
         # --- Överför modell variabler till lokala referenser
         
-        cond = np.asarray(input_data.cond)
-        outer_temp = input_data.outer_temp
-        inner_temp = input_data.inner_temp
-        ep = [input_data.t]
-        geometry = input_data.geometry()
+        cond = np.asarray(self.input_data.cond)
+        outer_temp = self.input_data.outer_temp
+        inner_temp = self.input_data.inner_temp
+        ep = [self.input_data.t]
+        geometry = self.input_data.geometry()
         
         mesh = cfm.GmshMeshGenerator(geometry)
         mesh.el_size_factor = 0.05     # <-- Anger max area för element
@@ -62,8 +63,10 @@ class Solver(object):
             for i, el, in enumerate(edof)
         )
         
-        return OutputData({
-            
+        element_t = [np.mean(np.array(t[el-1]).reshape(-1,)) for el in edof]
+        
+        self.output_data.update({   
+            "element_t": element_t,
             "t": t.tolist(),
             "r": r,
             "coords": coords,
@@ -74,7 +77,7 @@ class Solver(object):
             "max_flow": max_flow,
         })
 
-class InputData(object):
+class InputData(dict):
     """Klass för att definiera indata för vår modell."""
     def __init__(self):
         pass
@@ -85,19 +88,22 @@ class InputData(object):
             
     def load(self, filename):
         with open(filename, "r") as ifile:
-            for key, val in json.load(ifile).items():
-                setattr(self, key, val)
-                
+            self.update(json.load(ifile))
+    
+    def update(self, attrs):
+        for key, val in attrs.items():
+            setattr(self, key, val)  
+            
     def __str__(self):
        attr = vars(self)
        aliases = {
            "t": "Thickness",
-           "x": "x",
-           "y": "y",
-           "w": "w",
-           "h": "h",
-           "a": "a",
-           "b": "b",
+           "x_position": "X-position",
+           "y_position": "Y-position",
+           "outer_width": "Outer Width",
+           "outer_height": "Outer Height",
+           "inner_width": "Inner Width",
+           "inner_height": "Inner Height",
            "cond": "Conduction",
        }
        return "\n".join(f'{val}:\n{attr[key]}' for key, val in aliases.items())
@@ -105,12 +111,12 @@ class InputData(object):
     def geometry(self):
         """Skapa en geometri instans baserat på definierade parametrar"""
 
-        w = self.w
-        h = self.h
-        a = self.a
-        b = self.b
-        x = self.x
-        y = self.y
+        w = self.outer_width
+        h = self.outer_height
+        a = self.inner_width
+        b = self.inner_height
+        x = self.x_position
+        y = self.y_position
         
         g = cfg.Geometry()
         
@@ -143,9 +149,13 @@ class InputData(object):
         return g
 
 
-class OutputData(object):
+class OutputData:
     """Klass för att lagra resultaten från beräkningen."""
-    def __init__(self, attrs):
+    
+    def __init__(self):
+        pass
+    
+    def update(self, attrs):
         for key, val in attrs.items():
             setattr(self, key, val);
         
@@ -156,7 +166,7 @@ class OutputData(object):
         }
         return "\n".join(f'{val}:\n{attr[key]}' for key, val in aliases.items())
         
-class Report(object):
+class Report:
     """Klass för presentation av indata och utdata i rapportform."""
     def __init__(self, input_data, output_data):
         self.input_data = input_data
@@ -175,6 +185,11 @@ class Visualisation(object):
     def __init__(self, input_data, output_data):
         self.input_data = input_data
         self.output_data = output_data
+        
+        self.geom_fig = None
+        self.mesh_fig = None
+        self.el_value_fig = None
+        self.node_value_fig = None
 
     def show(self):
 
@@ -194,7 +209,57 @@ class Visualisation(object):
         cfv.draw_nodal_values(t, coords, edof, 12, "Temp", dofs_per_node, el_type, draw_elements=False)
         cfv.figure()
         cfv.draw_element_values(max_flow, coords, edof, dofs_per_node, el_type, title="Max Flow")
+    
+    def show_geometry(self):
+        self.geom_fig = cfv.figure(self.geom_fig)
+        
+        cfv.clf()            
+        cfv.draw_geometry(self.output_data.geometry, title="Geometry")
+    
+    def show_mesh(self):
+        self.mesh_fig = cfv.figure(self.mesh_fig)
+        
+        cfv.clf()
+        cfv.draw_mesh(
+            self.output_data.coords,
+            self.output_data.edof, 
+            self.output_data.dofs_per_node,
+            self.output_data.el_type,
+            title="Mesh"
+        )
+        
+    def show_nodal_values(self):
+        """Visa geometri visualisering"""
 
+        self.node_value_fig = cfv.figure(self.node_value_fig)
+        
+        cfv.clf()            
+        cfv.draw_nodal_values(
+            self.output_data.t,
+            self.output_data.coords,
+            self.output_data.edof,
+            12, "Node Values",
+            self.output_data.dofs_per_node,
+            self.output_data.el_type,
+            draw_elements=False
+        )
+        
+    def show_element_values(self):
+        self.el_value_fig = cfv.figure(self.el_value_fig)
+        
+        cfv.clf()
+        cfv.draw_element_values(
+            self.output_data.element_t,
+            self.output_data.coords,
+            self.output_data.edof,
+            self.output_data.dofs_per_node,
+            self.output_data.el_type,
+            title="Element Values"
+        )
+        
+    def close_all(self):
+        cfv.close_all()
+    
     def wait(self):
         """Denna metod ser till att fönstren hålls uppdaterade och kommer att returnera
         När sista fönstret stängs"""
