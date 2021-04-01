@@ -1,0 +1,17 @@
+{
+    "conduction": 1.7,
+    "element_max_size": 35,
+    "inner_height": "2*t*0.1",
+    "inner_temp": 120,
+    "inner_width": "2*t*0.1",
+    "outer_height": "1",
+    "outer_temp": 20,
+    "outer_width": "1",
+    "t_from": 1,
+    "t_steps": 3,
+    "t_to": 3,
+    "thickness": 1,
+    "version": 1,
+    "x_position": "0.5 - t*0.1",
+    "y_position": "0.5 - t*0.1"
+}

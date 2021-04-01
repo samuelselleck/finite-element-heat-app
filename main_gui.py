@@ -1,7 +1,7 @@
 import sys
 
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QThread
-from PyQt5.QtWidgets import QApplication, QDialog, QWidget, QMainWindow, QFileDialog
+from PyQt5.QtWidgets import QApplication, QDialog, QWidget, QMainWindow, QFileDialog, QMessageBox
 from PyQt5.uic import loadUi
 
 import heatmodel as hm
@@ -10,17 +10,18 @@ import calfem.ui as cfui
 class SolverThread(QThread):
     """Klass för att hantera beräkning i bakgrunden"""
     
-    def __init__(self, solver, callback, paramStudy = False):
+    def __init__(self, solver, callback, param_study = ""):
         """Klasskonstruktor"""
         QThread.__init__(self)
         self.solver = solver
+        self.param_study = param_study
         self.finished.connect(callback)
 
     def __del__(self):
         self.wait()
 
     def run(self):
-        self.solver.execute()
+        self.solver.execute(self.param_study)
 
 class MainWindow(QMainWindow):
     """MainWindow-klass som hanterar vårt huvudfönster"""
@@ -47,7 +48,8 @@ class MainWindow(QMainWindow):
                 "geometry_button",
                 "mesh_button",
                 "nodal_values_button",
-                "element_values_button"
+                "element_values_button",
+                "parameter_study_button"
             },
             "textfields": {
                 "outer_width",
@@ -56,6 +58,12 @@ class MainWindow(QMainWindow):
                 "inner_height",
                 "x_position",
                 "y_position",
+            },
+            "numfields": {
+                "t_from",
+                "t_to",
+                "t_steps",
+                "element_max_size"
             }
         }
 
@@ -80,14 +88,18 @@ class MainWindow(QMainWindow):
         self.filename = None
         self.input_data.update({
             "version": 1,
-            "outer_width": 1,
-            "outer_height": 1,
-            "inner_width": 0.1,
-            "inner_height": 0.1,
-            "x_position": 0.1,
-            "y_position": 0.1,
-            "t": 1,
-            "cond": 1.7,
+            "outer_width": "1",
+            "outer_height": "1",
+            "inner_width": "0.1",
+            "inner_height": "0.1",
+            "x_position": "0.1",
+            "y_position": "0.1",
+            "t_from": 0,
+            "t_to": 1,
+            "t_steps": 10,
+            "element_max_size": 10,
+            "thickness": 1,
+            "conduction": 1.7,
             "outer_temp": 20,
             "inner_temp": 120,
         })
@@ -139,7 +151,27 @@ class MainWindow(QMainWindow):
         self.ui.report_field.setPlainText(str(self.report)) 
         self.calc_done = True
         self.ui.setEnabled(True)
+    
+    def on_parameter_study_button(self):
+        self.ui.setEnabled(False)
+        self.update_model()
         
+        self.solverThread = SolverThread(self.solver, self.on_finished_param_study, self.filename.split(".")[0])      
+        self.calc_done = False
+        self.solverThread.start()
+        
+        
+    def on_finished_param_study(self):
+        self.calc_done = True
+        self.ui.setEnabled(True)
+        msg = QMessageBox(
+            QMessageBox.Information,
+            "Parameter Study Done",
+            "The parameter study is finished, vtk files exported."
+        )
+        msg.exec_()
+
+    
     def on_geometry_button(self):
         if self.visualization:
             self.visualization.show_geometry()
@@ -159,13 +191,19 @@ class MainWindow(QMainWindow):
     def update_ui(self):
         for field in self.components["textfields"]:
             ui_field = getattr(self.ui, field)
-            ui_field.setText(str(getattr(self.input_data, field)))
+            ui_field.setText(getattr(self.input_data, field))
+        for field in self.components["numfields"]:
+            ui_field = getattr(self.ui, field)
+            ui_field.setValue(int(getattr(self.input_data, field)))
 
     def update_model(self):
         for field in self.components["textfields"]:
             ui_field = getattr(self.ui, field)
-            setattr(self.input_data, field,float(ui_field.text()))
-
+            setattr(self.input_data, field,ui_field.text())
+        for field in self.components["numfields"]:
+            ui_field = getattr(self.ui, field)
+            setattr(self.input_data, field, ui_field.value())
+            
 if __name__ == "__main__":
 
     app = QApplication(sys.argv)
