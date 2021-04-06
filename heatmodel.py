@@ -8,6 +8,8 @@ import calfem.vis_mpl as cfv       # <-- Visualisering
 import calfem.utils as cfu     # <-- Blandade rutiner
 
 import pyvtk as vtk
+import matplotlib.pyplot as plt
+
 
 MARKERS = {
     "outer": 1,
@@ -145,12 +147,15 @@ class InputData(dict):
         glob = {"__builtins__": {}}
         loc = {"t": t_param}
         
-        w = eval(self.outer_width, glob, loc)
-        h = eval(self.outer_height, glob, loc)
-        a = eval(self.inner_width, glob, loc)
-        b = eval(self.inner_height, glob, loc)
-        x = eval(self.x_position, glob, loc)
-        y = eval(self.y_position, glob, loc)
+        try:
+            w = eval(self.outer_width, glob, loc)
+            h = eval(self.outer_height, glob, loc)
+            a = eval(self.inner_width, glob, loc)
+            b = eval(self.inner_height, glob, loc)
+            x = eval(self.x_position, glob, loc)
+            y = eval(self.y_position, glob, loc)
+        except:
+            return self.g
         
         points = [
             [0, 0], [w, 0], [w, h], [0, h],
@@ -162,18 +167,18 @@ class InputData(dict):
             "inner": [[4, 5], [5, 6], [6, 7], [7, 4]]
         }
         
-        g = cfg.Geometry()
+        self.g = cfg.Geometry()
         
         for point in points:
-            g.point(point)
+            self.g.point(point)
         
         for marker_name, splines in boundaries.items():
             for spline in splines:
-                g.spline(spline, marker = MARKERS[marker_name])
+                self.g.spline(spline, marker = MARKERS[marker_name])
          
-        g.surface([0,1, 2, 3], [[4, 5, 6, 7]])
+        self.g.surface([0,1, 2, 3], [[4, 5, 6, 7]])
 
-        return g
+        return self.g
 
 
 class OutputData:
@@ -213,18 +218,20 @@ class Visualisation(object):
         self.input_data = input_data
         self.output_data = output_data
         
+        plt.ioff()
         self.geom_fig = None
         self.mesh_fig = None
         self.el_value_fig = None
         self.node_value_fig = None
-
-    def show_geometry(self):
-        self.geom_fig = cfv.figure(self.geom_fig)
         
+    def geometry(self):
+        
+        self.geom_fig = cfv.figure(self.geom_fig)
         cfv.clf()            
         cfv.draw_geometry(self.output_data.geometry, title="Geometry")
+        return self.geom_fig
     
-    def show_mesh(self):
+    def mesh(self):
         self.mesh_fig = cfv.figure(self.mesh_fig)
         
         cfv.clf()
@@ -236,7 +243,9 @@ class Visualisation(object):
             title="Mesh"
         )
         
-    def show_nodal_values(self):
+        return self.mesh_fig
+        
+    def nodal_values(self):
         """Visa geometri visualisering"""
 
         self.node_value_fig = cfv.figure(self.node_value_fig)
@@ -252,7 +261,9 @@ class Visualisation(object):
             draw_elements=False
         )
         
-    def show_element_values(self):
+        return self.node_value_fig
+        
+    def element_values(self):
         self.el_value_fig = cfv.figure(self.el_value_fig)
         
         cfv.clf()
@@ -264,6 +275,8 @@ class Visualisation(object):
             self.output_data.el_type,
             title="Element Values"
         )
+        
+        return self.el_value_fig
         
     def close_all(self):
         cfv.close_all()
