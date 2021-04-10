@@ -26,7 +26,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <property name="spacing">
-         <number>0</number>
+         <number>2</number>
         </property>
         <item>
          <widget class="QToolButton" name="save_tool_button">
@@ -34,7 +34,8 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset theme="document-save"/>
+           <iconset theme="document-save">
+            <normaloff>.</normaloff>.</iconset>
           </property>
           <property name="autoRaise">
            <bool>true</bool>
@@ -47,7 +48,8 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset theme="document-open"/>
+           <iconset theme="document-open">
+            <normaloff>.</normaloff>.</iconset>
           </property>
           <property name="autoRaise">
            <bool>true</bool>
@@ -67,7 +69,8 @@
            <string>...</string>
           </property>
           <property name="icon">
-           <iconset theme="system-run"/>
+           <iconset theme="system-run">
+            <normaloff>.</normaloff>.</iconset>
           </property>
           <property name="autoRaise">
            <bool>true</bool>
@@ -412,7 +415,7 @@
      <x>0</x>
      <y>0</y>
      <width>771</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

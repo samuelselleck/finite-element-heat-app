@@ -67,15 +67,19 @@ class MainWindow(QMainWindow):
             }
         }
 
+        # --- Bind controls to methods
         for to_connect in ["triggered", "clicked"]:
             for component_name in self.components[to_connect]:
                 component = getattr(self.ui, component_name)
                 getattr(component, to_connect).connect(getattr(self, f'on_{component_name}'))
-                
+        
+        # --- Bind controls to update geometry
         for component_name in self.components["textfields"]:
             component = getattr(self.ui, component_name)
             component.returnPressed.connect(self.update_geometry)
             
+        self.ui.t_from.valueChanged.connect(self.update_geometry)
+        
         # --- Init model
         self.input_data = hm.InputData()
         self.output_data = hm.OutputData()
@@ -84,10 +88,10 @@ class MainWindow(QMainWindow):
         self.visualization = hm.Visualisation(self.input_data, self.output_data)
         self.calc_done = True
         self.init_input_data()
-        # -- Show
+        
+        # --- Show
         self.ui.show()
         self.ui.raise_()
-        
         self.update_geometry()
     
     def init_input_data(self):

@@ -154,8 +154,8 @@ class InputData(dict):
             b = eval(self.inner_height, glob, loc)
             x = eval(self.x_position, glob, loc)
             y = eval(self.y_position, glob, loc)
-        except:
-            return self.g
+        except Exception:
+            return
         
         points = [
             [0, 0], [w, 0], [w, h], [0, h],
@@ -167,18 +167,18 @@ class InputData(dict):
             "inner": [[4, 5], [5, 6], [6, 7], [7, 4]]
         }
         
-        self.g = cfg.Geometry()
+        g = cfg.Geometry()
         
         for point in points:
-            self.g.point(point)
+            g.point(point)
         
         for marker_name, splines in boundaries.items():
             for spline in splines:
-                self.g.spline(spline, marker = MARKERS[marker_name])
+                g.spline(spline, marker = MARKERS[marker_name])
          
-        self.g.surface([0,1, 2, 3], [[4, 5, 6, 7]])
+        g.surface([0,1, 2, 3], [[4, 5, 6, 7]])
 
-        return self.g
+        return g
 
 
 class OutputData:
@@ -277,14 +277,5 @@ class Visualisation(object):
         )
         
         return self.el_value_fig
-        
-    def close_all(self):
-        cfv.close_all()
-    
-    def wait(self):
-        """Denna metod ser till att fönstren hålls uppdaterade och kommer att returnera
-        När sista fönstret stängs"""
-
-        cfv.show_and_wait()
         
 
