@@ -96,23 +96,7 @@ class MainWindow(QMainWindow):
     
     def init_input_data(self):
         self.filename = None
-        self.input_data.update({
-            "version": 1,
-            "outer_width": "1",
-            "outer_height": "1",
-            "inner_width": "0.1",
-            "inner_height": "0.1",
-            "x_position": "0.1",
-            "y_position": "0.1",
-            "t_from": 0,
-            "t_to": 1,
-            "t_steps": 10,
-            "element_max_size": 10,
-            "thickness": 1,
-            "conduction": 1.7,
-            "outer_temp": 20,
-            "inner_temp": 120,
-        })
+        self.input_data.reset()
         self.update_ui(self.input_data)
     
     def on_save_tool_button(self):
@@ -128,10 +112,10 @@ class MainWindow(QMainWindow):
         self.init_input_data()
 
     def on_action_open(self):
-        self.filename, _ = QFileDialog.getOpenFileName(self.ui, 
+        temp_name, _ = QFileDialog.getOpenFileName(self.ui, 
         "Öppna modell", "", "Modell filer (*.json)")
-
-        if self.filename!="":
+        if temp_name != "":
+            self.filename = temp_name
             self.input_data.load(self.filename)
             self.update_ui(self.input_data)
             self.update_geometry()

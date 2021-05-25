@@ -9,6 +9,7 @@ import calfem.utils as cfu     # <-- Blandade rutiner
 
 import pyvtk as vtk
 import matplotlib.pyplot as plt
+import tabulate as tbl
 
 
 MARKERS = {
@@ -113,8 +114,27 @@ class Solver(object):
 class InputData(dict):
     """Klass för att definiera indata för vår modell."""
     def __init__(self):
-        pass
+        self.reset()
     
+    def reset(self):
+        self.update({
+            "version": 1,
+            "outer_width": "1",
+            "outer_height": "1",
+            "inner_width": "0.1",
+            "inner_height": "0.1",
+            "x_position": "0.1",
+            "y_position": "0.1",
+            "t_from": 0,
+            "t_to": 1,
+            "t_steps": 10,
+            "element_max_size": 10,
+            "thickness": 1,
+            "conduction": 1.7,
+            "outer_temp": 20,
+            "inner_temp": 120,
+        })
+
     def save(self, filename):
         with open(filename, "w") as ofile:
             json.dump(vars(self), ofile, sort_keys = True, indent = 4)
@@ -194,9 +214,15 @@ class OutputData:
     def __str__(self):
         attr = vars(self)
         aliases = {
-           "t": "Temperatures",
+           "t": "Temp",
         }
-        return "\n".join(f'{val}:\n{attr[key]}' for key, val in aliases.items())
+        return "\n".join(tbl.tabulate(
+            attr[key],
+            headers=["Node", val],
+            floatfmt=".2f",
+            tablefmt="psql",
+            showindex=range(1, len(attr[key]) + 1)
+        ) for key, val in aliases.items())
         
 class Report:
     """Klass för presentation av indata och utdata i rapportform."""
