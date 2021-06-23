@@ -335,7 +335,7 @@
       <item>
        <widget class="QTabWidget" name="tabWidget">
         <property name="currentIndex">
-         <number>2</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="tab">
          <attribute name="title">
@@ -343,7 +343,17 @@
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <widget class="QPlainTextEdit" name="report_field"/>
+           <widget class="QPlainTextEdit" name="report_field">
+            <property name="font">
+             <font>
+              <family>Courier 10 Pitch</family>
+             </font>
+            </property>
+            <property name="plainText">
+             <string>
+</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

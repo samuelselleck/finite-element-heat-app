@@ -209,20 +209,22 @@ class OutputData:
     
     def update(self, attrs):
         for key, val in attrs.items():
-            setattr(self, key, val);
+            setattr(self, key, val)
         
     def __str__(self):
         attr = vars(self)
-        aliases = {
-           "t": "Temp",
+        fields = {
+            "Node": np.arange(1, len(attr["t"]) + 1),
+            "Temp": np.asarray(attr["t"]),
+           "X-coord": np.asarray(attr["coords"].T[0]),
+           "Y-coord": np.asarray(attr["coords"].T[1]),
         }
-        return "\n".join(tbl.tabulate(
-            attr[key],
-            headers=["Node", val],
+        return tbl.tabulate(
+            fields,
+            headers="keys",
             floatfmt=".2f",
             tablefmt="psql",
-            showindex=range(1, len(attr[key]) + 1)
-        ) for key, val in aliases.items())
+        )
         
 class Report:
     """Klass för presentation av indata och utdata i rapportform."""
